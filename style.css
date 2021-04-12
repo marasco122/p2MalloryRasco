@@ -1,0 +1,29 @@
+h1 {
+    text-indent: 200px;
+}
+
+h2 {
+    text-indent: 250px;
+}
+
+h3 {
+    text-indent: 285px;
+}
+
+ul li {
+    margin-left: 300px;
+    font-size: 20px; 
+}
+
+ol li {
+    margin-left: 300px;
+    font-size: 20px; 
+}
+
+.rotate90 {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
