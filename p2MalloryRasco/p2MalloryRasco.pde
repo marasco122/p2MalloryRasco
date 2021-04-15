@@ -24,6 +24,11 @@ PImage traction;
 PImage tractionMal;
 
 Knob speedometer;
+Knob tachometer;
+Knob eTemp;
+Knob gas;
+Button brakeP;
+Button gasP;
 
 Textlabel celLabel;
 Textlabel farenLabel;
@@ -66,6 +71,8 @@ boolean cruiseSet = false;
 boolean rightSig = false;
 boolean leftSig = false;
 boolean sigLightOn = false;
+float startTime;
+float eTempSpeed = 3000;
 float lasttimecheck;
 float timeinterval;
 int warningChoice = -1;
@@ -89,14 +96,13 @@ void setup() {
   cp5 = new ControlP5(this);
 
   fill(255);
-  font = createFont("Times New Roman", 50);
+  font = createFont("Helvetica", 50);
 
-  speedometer = (cp5.addKnob("speed").setRange(0, 140).setValue(45).setPosition(455, 215).setRadius(165).setFont(font)
+  speedometer = (cp5.addKnob("speed").setRange(0, 140).setValue(0).setPosition(455, 215).setRadius(165).setFont(font)
     .setNumberOfTickMarks(14).snapToTickMarks(false).setTickMarkLength(25).setTickMarkWeight(7))
     .setColorBackground(color(0)).setColorForeground(color(255)).setColorActive(color(255));
   cp5.getController("speed").getCaptionLabel().setVisible(false); 
   
-  font = createFont("Times New Roman", 50);
   speed0Label = cp5.addLabel("0").setColorValue(color(47, 139, 185)).setPosition(505, 430).setFont(font);
   speed20Label = cp5.addLabel("20").setColorValue(color(47, 139, 185)).setPosition(470, 360).setFont(font);
   speed40Label = cp5.addLabel("40").setColorValue(color(47, 139, 185)).setPosition(485, 280).setFont(font);
@@ -106,13 +112,13 @@ void setup() {
   speed120Label = cp5.addLabel("120").setColorValue(color(47, 139, 185)).setPosition(700, 360).setFont(font);
   speed140Label = cp5.addLabel("140").setColorValue(color(47, 139, 185)).setPosition(670, 430).setFont(font); 
   
-  speed160Label = cp5.addLabel("160").setColorValue(color(47, 139, 185));
-  speed180Label = cp5.addLabel("180").setColorValue(color(47, 139, 185));
-  speed200Label = cp5.addLabel("200").setColorValue(color(47, 139, 185));
-  speed220Label = cp5.addLabel("220").setColorValue(color(47, 139, 185));
-  speed240Label = cp5.addLabel("240").setColorValue(color(47, 139, 185));
+  speed160Label = cp5.addLabel("160").setColorValue(color(47, 139, 185)).setVisible(false);
+  speed180Label = cp5.addLabel("180").setColorValue(color(47, 139, 185)).setVisible(false);
+  speed200Label = cp5.addLabel("200").setColorValue(color(47, 139, 185)).setVisible(false);
+  speed220Label = cp5.addLabel("220").setColorValue(color(47, 139, 185)).setVisible(false);
+  speed240Label = cp5.addLabel("240").setColorValue(color(47, 139, 185)).setVisible(false);
 
-  Knob tachometer = (cp5.addKnob("tach").setRange(0, 8).setValue(2.3).setPosition(133, 279).setRadius(132).setFont(font)
+  tachometer = (cp5.addKnob("tach").setRange(0, 8).setValue(1).setPosition(133, 279).setRadius(132).setFont(font)
     .setNumberOfTickMarks(8).snapToTickMarks(false).setTickMarkLength(20).setTickMarkWeight(7))
     .setColorBackground(color(0)).setColorForeground(color(255)).setColorActive(color(255));
   cp5.getController("tach").getCaptionLabel().setVisible(false);
@@ -127,13 +133,14 @@ void setup() {
   tach7Label = cp5.addLabel("7").setPosition(350, 400).setFont(font).setColorValue(color(255, 0, 0));
   tach8Label = cp5.addLabel("8").setPosition(325, 445).setFont(font).setColorValue(color(255, 0, 0));
 
-  Knob eTemp = (cp5.addKnob("eTemp").setRange(60, 120).setValue(90).setPosition(35, 163).setRadius(67).setFont(font)
+  eTemp = (cp5.addKnob("eTemp").setRange(60, 120).setValue(0).setPosition(35, 163).setRadius(67).setFont(font)
     .setNumberOfTickMarks(5).snapToTickMarks(false).setTickMarkLength(15).setTickMarkWeight(6).setStartAngle(PI/2).setAngleRange(PI))
     .setColorBackground(color(0)).setColorForeground(color(255)).setColorActive(color(255));
   cp5.getController("eTemp").getCaptionLabel().setVisible(false);
   cp5.getController("eTemp").getValueLabel().setVisible(false);
+  startTime = millis();
 
-  Knob gas = (cp5.addKnob("gauge").setRange(0, 100).setValue(100).setPosition(813, 163).setRadius(67).setFont(font)
+  gas = (cp5.addKnob("gauge").setRange(0, 100).setValue(100).setPosition(813, 163).setRadius(67).setFont(font)
     .setNumberOfTickMarks(4).snapToTickMarks(false).setTickMarkLength(15).setTickMarkWeight(6).setStartAngle(3*PI/2).setAngleRange(PI))
     .setColorBackground(color(0)).setColorForeground(color(255)).setColorActive(color(255));
   cp5.getController("gauge").getCaptionLabel().setVisible(false);
@@ -165,15 +172,15 @@ void setup() {
   cp5.getController("Faren").getCaptionLabel().setVisible(false);
   faren.setState(true);
 
-  celLabel = cp5.addLabel("C").setPosition(945, 20).setFont(font);
-  farenLabel = cp5.addLabel("F").setPosition(945, 75).setFont(font);
+  celLabel = cp5.addLabel("C").setPosition(945, 15).setFont(font);
+  farenLabel = cp5.addLabel("F").setPosition(945, 70).setFont(font);
 
-  font = createFont("Times New Roman", 40);
+  font = createFont("Helvetica", 40);
 
   milesLabel = cp5.addLabel("mph").setPosition(575, 450).setFont(font);
   kiloLabel = cp5.addLabel("km/h").setPosition(575, 450).setFont(font).setVisible(false);
 
-  font = createFont("Times New Roman", 25);
+  font = createFont("Helvetica", 25);
 
   mph = (cp5.addToggle("mphT").setSize(75, 50).setPosition(825, 465).setFont(font))
     .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(78, 173, 220));
@@ -187,12 +194,12 @@ void setup() {
   mphTLabel = cp5.addLabel("MPH").setPosition(830, 470).setFont(font);
   kmhTLabel = cp5.addLabel("KM/H").setPosition(910, 470).setFont(font);
 
-  font = createFont("Times New Roman", 15);
+  font = createFont("Helvetica", 15);
 
-  Button brakeP = (cp5.addButton("Brake").setSize(100, 160).setPosition(500, 520).setFont(font))
-    .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(85));
-  Button gasP = (cp5.addButton("Accelerate").setSize(100, 160).setPosition(620, 520).setFont(font))
-    .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(85));
+  brakeP = (cp5.addButton("Brake").setSize(100, 160).setPosition(500, 520).setFont(font))
+    .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(78, 173, 220));
+  gasP = (cp5.addButton("Accelerate").setSize(100, 160).setPosition(620, 520).setFont(font))
+    .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(78, 173, 220));
 
   right = (cp5.addToggle("Right").setSize(180, 75).setPosition(300, 520).setFont(font))
     .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(78, 173, 220));
@@ -216,7 +223,7 @@ void setup() {
    cp5.getController("Warnings").getCaptionLabel().setVisible(false);
    warnings.setState(false);
    
-   warningsLabel = cp5.addLabel("WARNINGS").setPosition(65,590).setFont(font);
+  warningsLabel = cp5.addLabel("WARNINGS").setPosition(65,590).setFont(font);
 
   cruise = (cp5.addToggle("Cruise").setSize(180, 75).setPosition(740, 520).setFont(font))
     .setColorBackground(color(25)).setColorForeground(color(150)).setColorActive(color(78, 173, 220));
@@ -253,6 +260,74 @@ void draw() {
   image(gasI, 760, 150);
   image(doorsI, 425, 20);
   image(seatbeltI, 510, 20);
+  
+  float currentETemp = eTemp.getValue();
+  float currentSpeed = speedometer.getValue();
+  float currentTach = tachometer.getValue();
+  if (mouseX > 620 && mouseX < 720 && mouseY > 520 && mouseY < 680 && mousePressed) {
+    currentSpeed++;
+    speedometer.setValue(currentSpeed);
+    
+    
+    currentTach = tachometer.getValue();
+    currentTach += .1;
+    tachometer.setValue(currentTach);
+  }
+  else {
+    if (speedometer.getValue() > 0) {
+      if (mph.getState() == true) {
+        if (speedometer.getValue() < 20) {
+          if (currentTach > 1.9) {
+            currentTach = tachometer.getValue();
+            currentTach -= .05;
+            tachometer.setValue(currentTach);
+          }
+        }
+        else {
+          if (currentTach > 2.3) {
+            currentTach = tachometer.getValue();
+            currentTach -= .05;
+            tachometer.setValue(currentTach);
+           } 
+         }
+      }
+      else {
+        if (speedometer.getValue() < 40) {
+          if (currentTach > 1.9) {
+            currentTach = tachometer.getValue();
+            currentTach -= .05;
+            tachometer.setValue(currentTach);
+          }
+        }
+        else {
+          if (currentTach > 2.3) {
+            currentTach = tachometer.getValue();
+            currentTach -= .05;
+            tachometer.setValue(currentTach);
+           } 
+         }
+      }
+      
+      if (currentETemp < 90) {
+        if (millis() > startTime + eTempSpeed) {
+          startTime = millis();
+          currentETemp++;
+          eTemp.setValue(currentETemp);
+        }
+      }
+    }
+    else {
+      if (currentTach > 0.9) {
+        currentTach = tachometer.getValue();
+        currentTach -= .05;
+        tachometer.setValue(currentTach);
+      } 
+    }
+  }
+  if (mouseX > 500 && mouseX < 600 && mouseY > 520 && mouseY < 680 && mousePressed) {
+      currentSpeed--;
+      speedometer.setValue(currentSpeed);
+  }
 
   if (cruiseOn == false) {
     image(cruiseControlI, 465, 100);
@@ -261,7 +336,7 @@ void draw() {
   }
 
   fill(47, 139, 185);
-  font = createFont("Times New Roman", 25);
+  font = createFont("Helvetica", 25);
   textFont(font);
   if (cruiseSet == true && cruiseOn == true) {
     text("SET", 550, 140);
@@ -271,7 +346,7 @@ void draw() {
     rect(550, 120, 70, 50);
   }
 
-  timeinterval = 750;
+  timeinterval = 500;
   if (leftSig == true) {
     if(sigLightOn == true) {
       fill(60, 220, 124);
@@ -328,7 +403,7 @@ void draw() {
   fill(255);
   stroke(0);
   text("Warning",25,20);
-  font = createFont("Times New Roman", 15);
+  font = createFont("Helvetica", 15);
   switch(warningChoice) {
      case -1:
        fill(25);
@@ -358,12 +433,13 @@ void draw() {
        break;
      case 5:
        image(security,25,25);
-       text("Security",130,100);
+       text("Security",125,100);
        break;
      case 6:
        textFont(font);
        image(tire,25,25);
-       text("Tire Pressure",130,100);
+       text("Tire",135,80);
+       text("Pressure",135,100);
        break;
      case 7:
        textFont(font);
@@ -395,7 +471,7 @@ void draw() {
   fill(255);
   stroke(255);
 
-  font = createFont("Times New Roman", 35);
+  font = createFont("Helvetica", 35);
   textFont(font);
   text("H", 110, 160);
   text("C", 110, 318);
@@ -403,9 +479,15 @@ void draw() {
   triangle(750, 175, 760, 165, 760, 185);
   text("F", 850, 165);
   text("E", 850, 320);
-
-  text("105366", 850, 430);
-  font = createFont("Times New Roman", 20);
+  
+  if (mph.getState() == true) {
+    text("105366", 850, 430);
+  }
+  else {
+    text("169570", 850, 430);
+  }
+    
+  font = createFont("Helvetica", 20);
   textFont(font);
   text("ODOMETER", 870, 370);
 
@@ -416,14 +498,14 @@ void draw() {
     temp = "18";
   }
 
-  font = createFont("Times New Roman", 75);
+  font = createFont("Helvetica", 75);
   textFont(font);
   text(temp, 780, 100);
-  font = createFont("Times New Roman", 50);
+  font = createFont("Helvetica", 50);
   textFont(font);
   text(tempType, 895, 115);
   noFill();
-  circle(870, 50, 15);
+  circle(875, 50, 15);
 }
 
 void controlEvent(ControlEvent theEvent) {
@@ -431,15 +513,16 @@ void controlEvent(ControlEvent theEvent) {
   switch(theEvent.getController().getName()) {
   case "mphT":
     if (mph.getState() == true) { 
-      font = createFont("Times New Roman", 25);
+      font = createFont("Helvetica", 25);
       kmh.setState(false);
 
-      speedometer.setRange(0, 140).setValue(45).setNumberOfTickMarks(14);
+      speedometer.setRange(0, 140).setValue(0).setNumberOfTickMarks(14);
+      tachometer.setValue(0);
       cp5.getController("speed").setCaptionLabel("mph");
       milesLabel.setVisible(true);
       kiloLabel.setVisible(false);
       
-      fontMiles = createFont("Times New Roman",50);
+      fontMiles = createFont("Helvetica",50);
       speed0Label.setPosition(505, 430).setFont(fontMiles);
       speed20Label.setPosition(470, 360).setFont(fontMiles);
       speed40Label.setPosition(485, 280).setFont(fontMiles);
@@ -460,21 +543,22 @@ void controlEvent(ControlEvent theEvent) {
     if (kmh.getState() == true) {
       mph.setState(false);
 
-      speedometer.setRange(0, 240).setValue(70).setNumberOfTickMarks(24);
+      speedometer.setRange(0, 240).setValue(0).setNumberOfTickMarks(24);
+      tachometer.setValue(0);
       cp5.getController("speed").setCaptionLabel("km/h");
       kiloLabel.setVisible(true);
       milesLabel.setVisible(false);
       
-      fontKilo = createFont("Times New Roman", 35);
+      fontKilo = createFont("Helvetica", 35);
       speed0Label.setPosition(515, 450).setFont(fontKilo);
       speed20Label.setPosition(485, 410).setFont(fontKilo);
       speed40Label.setPosition(470, 360).setFont(fontKilo);
       speed60Label.setPosition(480, 310).setFont(fontKilo);
-      speed80Label.setPosition(505, 275).setFont(fontKilo);
-      speed100Label.setPosition(535, 245).setFont(fontKilo);
-      speed120Label.setPosition(590, 225).setFont(fontKilo);
-      speed140Label.setPosition(645, 245).setFont(fontKilo);
-      speed160Label.setVisible(true).setPosition(680, 275).setFont(fontKilo);
+      speed80Label.setPosition(505, 270).setFont(fontKilo);
+      speed100Label.setPosition(535, 240).setFont(fontKilo);
+      speed120Label.setPosition(590, 220).setFont(fontKilo);
+      speed140Label.setPosition(645, 240).setFont(fontKilo);
+      speed160Label.setVisible(true).setPosition(680, 270).setFont(fontKilo);
       speed180Label.setVisible(true).setPosition(700, 310).setFont(fontKilo);
       speed200Label.setVisible(true).setPosition(715, 360).setFont(fontKilo);
       speed220Label.setVisible(true).setPosition(705, 410).setFont(fontKilo);
@@ -558,7 +642,7 @@ void controlEvent(ControlEvent theEvent) {
         warningChoice = -1;
       }
       break;
-
+  
   case "Brake":
     cruiseSet = false;
     break;
