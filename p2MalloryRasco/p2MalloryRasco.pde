@@ -517,7 +517,7 @@ void controlEvent(ControlEvent theEvent) {
       kmh.setState(false);
 
       speedometer.setRange(0, 140).setValue(0).setNumberOfTickMarks(14);
-      tachometer.setValue(0);
+      tachometer.setValue(0.9);
       cp5.getController("speed").setCaptionLabel("mph");
       milesLabel.setVisible(true);
       kiloLabel.setVisible(false);
@@ -544,7 +544,7 @@ void controlEvent(ControlEvent theEvent) {
       mph.setState(false);
 
       speedometer.setRange(0, 240).setValue(0).setNumberOfTickMarks(24);
-      tachometer.setValue(0);
+      tachometer.setValue(0.9);
       cp5.getController("speed").setCaptionLabel("km/h");
       kiloLabel.setVisible(true);
       milesLabel.setVisible(false);
